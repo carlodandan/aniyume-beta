@@ -2,10 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useFetch } from '../hooks/useFetch';
-import { Hero } from '../components/Hero';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-import { getTitle } from '../utils/helpers';
 
 const AnimeDetail = () => {
   const { slug } = useParams();
@@ -69,76 +67,146 @@ const AnimeDetail = () => {
   }
 
   const anime = data;
+  const anilist = anime.anilist || {};
   const episodes = anime.episodes || [];
-  const title = getTitle(anime.title);
+  const sortedEpisodes = [...episodes].reverse();
+
+  // Helper to format date
+  const formatDate = (dateObj) => {
+    if (!dateObj) return '';
+    const { year, month, day } = dateObj;
+    if (!year || !month || !day) return '';
+    return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Character & staff data
+  const mainCharacters = anilist.characters?.edges?.filter(edge => edge.role === 'MAIN') || [];
+  const supportingCharacters = anilist.characters?.edges?.filter(edge => edge.role === 'SUPPORTING') || [];
+  const allCharacters = [...mainCharacters, ...supportingCharacters];
+  const staffEdges = anilist.staff?.edges || [];
+
+  // Cover image – prefer root cover_image, fallback to anilist.coverImage
+  const coverImage = anime.cover_image?.large || anilist.coverImage?.large || anilist.coverImage?.medium || null;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-zinc-100 antialiased selection:bg-cyan-500/30">
       <Header />
 
-      <Hero anime={anime} />
-
       <main className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
-          <div className="lg:col-span-3 space-y-8">
-            {anime.description && (
-              <section>
-                <h2 className="text-xl font-bold text-white mb-3">Synopsis</h2>
-                <p
-                  className="text-sm text-zinc-400 leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: anime.description }}
-                />
-              </section>
+        {/* Top section: Image + Info */}
+        <div className="flex flex-col md:flex-row gap-6 md:gap-8 m-12">
+          {/* Left: Cover Image */}
+          <div className="flex-shrink-0">
+            {coverImage ? (
+              <img
+                src={coverImage}
+                alt={anilist.title?.english || anilist.title?.romaji || 'Cover'}
+                className="w-full max-w-[240px] md:max-w-[280px] rounded-lg shadow-lg object-cover"
+              />
+            ) : (
+              <div className="w-full max-w-[240px] md:max-w-[280px] aspect-[2/3] bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500 text-sm">
+                No cover
+              </div>
+            )}
+          </div>
+
+          {/* Right: Title, Description, Metadata */}
+          <div className="flex-1 space-y-4 min-w-0">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+              {anilist.title?.english || anilist.title?.romaji || anilist.title?.native || 'Untitled'}
+            </h1>
+            {anilist.title?.native && anilist.title?.native !== anilist.title?.english && (
+              <p className="text-sm text-zinc-400">{anilist.title.native}</p>
             )}
 
-            <section>
-              <h2 className="text-xl font-bold text-white mb-3">Details</h2>
-              <dl className="grid grid-cols-2 gap-2 text-sm text-zinc-400">
-                {anime.format && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Format</dt>
-                    <dd>{anime.format}</dd>
-                  </>
-                )}
-                {anime.status && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Status</dt>
-                    <dd>{anime.status}</dd>
-                  </>
-                )}
-                {anime.episodes > 0 && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Episodes</dt>
-                    <dd>{anime.episodes}</dd>
-                  </>
-                )}
-                {anime.season && anime.season_year > 0 && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Season</dt>
-                    <dd>{anime.season} {anime.season_year}</dd>
-                  </>
-                )}
-                {anime.average_score > 0 && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Score</dt>
-                    <dd className="text-yellow-400">★ {anime.average_score}%</dd>
-                  </>
-                )}
-                {anime.genres?.length > 0 && (
-                  <>
-                    <dt className="font-medium text-zinc-500">Genres</dt>
-                    <dd>{anime.genres.join(', ')}</dd>
-                  </>
-                )}
-              </dl>
-            </section>
+            {anilist.description && (
+              <div>
+                <h2 className="text-sm font-semibold text-white uppercase tracking-wider mb-1">Synopsis</h2>
+                <p
+                  className="text-sm text-zinc-400 leading-relaxed line-clamp-4"
+                  dangerouslySetInnerHTML={{ __html: anilist.description }}
+                />
+              </div>
+            )}
 
-            {episodes.length > 0 && (
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm text-zinc-400">
+              {anilist.format && (
+                <>
+                  <dt className="font-medium text-zinc-500">Format</dt>
+                  <dd>{anilist.format}</dd>
+                </>
+              )}
+              {anilist.status && (
+                <>
+                  <dt className="font-medium text-zinc-500">Status</dt>
+                  <dd>{anilist.status}</dd>
+                </>
+              )}
+              {anilist.episodes > 0 && (
+                <>
+                  <dt className="font-medium text-zinc-500">Episodes</dt>
+                  <dd>{anilist.episodes}</dd>
+                </>
+              )}
+              {anilist.duration > 0 && (
+                <>
+                  <dt className="font-medium text-zinc-500">Duration</dt>
+                  <dd>{anilist.duration} min</dd>
+                </>
+              )}
+              {anilist.season && anilist.seasonYear && (
+                <>
+                  <dt className="font-medium text-zinc-500">Season</dt>
+                  <dd>{anilist.season} {anilist.seasonYear}</dd>
+                </>
+              )}
+              {anilist.averageScore > 0 && (
+                <>
+                  <dt className="font-medium text-zinc-500">Score</dt>
+                  <dd className="text-yellow-400">★ {anilist.averageScore}%</dd>
+                </>
+              )}
+              {anilist.genres?.length > 0 && (
+                <>
+                  <dt className="font-medium text-zinc-500">Genres</dt>
+                  <dd>{anilist.genres.join(', ')}</dd>
+                </>
+              )}
+              {anilist.source && (
+                <>
+                  <dt className="font-medium text-zinc-500">Source</dt>
+                  <dd>{anilist.source}</dd>
+                </>
+              )}
+              {anilist.startDate && (
+                <>
+                  <dt className="font-medium text-zinc-500">Start Date</dt>
+                  <dd>{formatDate(anilist.startDate)}</dd>
+                </>
+              )}
+              {anilist.endDate && (
+                <>
+                  <dt className="font-medium text-zinc-500">End Date</dt>
+                  <dd>{formatDate(anilist.endDate)}</dd>
+                </>
+              )}
+            </dl>
+          </div>
+        </div>
+
+        {/* Episodes + Sidebar (staff & characters) – same as before */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-4">
+          <div className="lg:col-span-3 space-y-8">
+            {sortedEpisodes.length > 0 && (
               <section>
                 <h2 className="text-xl font-bold text-white mb-4">Episodes</h2>
                 <div className="max-h-[600px] overflow-y-auto pr-2 no-scrollbar">
                   <ul className="space-y-2">
-                    {episodes.map((ep) => {
+                    {sortedEpisodes.map((ep) => {
                       const thumbKey = String(ep.episode_number - 1);
                       const thumbnailUrl = thumbnails[thumbKey] || ep.thumbnail || null;
 
@@ -210,10 +278,86 @@ const AnimeDetail = () => {
           </div>
 
           <aside className="lg:col-span-1 border-t border-zinc-800/60 pt-8 lg:border-t-0 lg:pt-0 lg:pl-4">
-            <div className="sticky top-6 space-y-4">
-              <div className="rounded-lg bg-zinc-800/30 p-4 text-center">
-                <p className="text-xs text-zinc-500">More info coming soon</p>
-              </div>
+            <div className="sticky top-6 space-y-6">
+              {/* Studios */}
+              {anilist.studios?.nodes?.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Studios</h3>
+                  <ul className="space-y-1 text-sm text-zinc-400">
+                    {anilist.studios.nodes.map((studio, idx) => (
+                      <li key={idx}>{studio.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Characters */}
+              {allCharacters.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Characters</h3>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {allCharacters.slice(0, 8).map((edge, idx) => {
+                      const char = edge.node;
+                      return (
+                        <div key={idx} className="flex items-center gap-3">
+                          {char.image?.large ? (
+                            <img
+                              src={char.image.large}
+                              alt={char.name.full}
+                              className="w-10 h-10 rounded-full object-cover bg-zinc-800"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-xs text-zinc-500">
+                              ?
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{char.name.full}</p>
+                            <p className="text-xs text-zinc-500 capitalize">{edge.role.toLowerCase()}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {allCharacters.length > 8 && (
+                      <p className="text-xs text-zinc-500">+{allCharacters.length - 8} more</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Staff */}
+              {staffEdges.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Staff</h3>
+                  <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                    {staffEdges.slice(0, 8).map((edge, idx) => {
+                      const staff = edge.node;
+                      return (
+                        <div key={idx} className="flex items-center gap-3">
+                          {staff.image?.large ? (
+                            <img
+                              src={staff.image.large}
+                              alt={staff.name.full}
+                              className="w-10 h-10 rounded-full object-cover bg-zinc-800"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-zinc-700 flex items-center justify-center text-xs text-zinc-500">
+                              ?
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{staff.name.full}</p>
+                            <p className="text-xs text-zinc-500 truncate">{edge.role}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {staffEdges.length > 8 && (
+                      <p className="text-xs text-zinc-500">+{staffEdges.length - 8} more</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
         </div>
