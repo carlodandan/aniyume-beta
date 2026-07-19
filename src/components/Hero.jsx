@@ -21,7 +21,7 @@ export const Hero = ({ anime }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/70 via-transparent to-transparent" />
       </div>
 
-      <div className="relative flex h-full items-end px-4 md:px-8 lg:px-12 pb-8 md:pb-12">
+      <div className="relative flex h-full items-center px-4 md:px-8 lg:px-12 p-8 md:p-12">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 mb-2">
             {anime.status === 'Releasing' && (
