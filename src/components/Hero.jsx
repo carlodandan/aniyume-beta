@@ -10,6 +10,7 @@ export const Hero = ({ anime }) => {
 
   return (
     <div className="relative h-[50vh] min-h-[320px] max-h-[600px] w-full overflow-hidden">
+      {/* Background stays full-bleed, no extra padding */}
       <div className="absolute inset-0">
         <img
           src={banner}
@@ -21,7 +22,8 @@ export const Hero = ({ anime }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0f]/70 via-transparent to-transparent" />
       </div>
 
-      <div className="relative flex h-full items-center px-4 md:px-8 lg:px-12 p-8 md:p-12">
+      {/* Text container with increased top padding to clear the fixed navbar */}
+      <div className="relative flex h-full items-center px-4 md:px-8 lg:px-12 pt-40 md:pt-30 pb-8 md:pb-12">
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 mb-2">
             {anime.status === 'Releasing' && (
@@ -38,7 +40,7 @@ export const Hero = ({ anime }) => {
               </span>
             )}
           </div>
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-extrabold text-white drop-shadow-lg line-clamp-2">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-white drop-shadow-lg line-clamp-2">
             {title}
           </h1>
           <p className="mt-2 line-clamp-2 text-sm text-zinc-300 md:text-base drop-shadow-md max-w-xl">

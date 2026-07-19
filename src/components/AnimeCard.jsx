@@ -1,3 +1,5 @@
+// src/components/AnimeCard.jsx
+import { Link } from 'react-router-dom';
 import { getTitle, getCover } from '../utils/helpers';
 
 export const AnimeCard = ({ anime, size = 'normal' }) => {
@@ -6,7 +8,10 @@ export const AnimeCard = ({ anime, size = 'normal' }) => {
   const isSmall = size === 'small';
 
   return (
-    <div className={`group flex flex-col flex-shrink-0 ${isSmall ? 'w-28 sm:w-32' : 'w-36 sm:w-44'} cursor-pointer`}>
+    <Link
+      to={`/anime/${anime.anime_id}`}
+      className={`group flex flex-col flex-shrink-0 ${isSmall ? 'w-28 sm:w-32' : 'w-36 sm:w-44'} cursor-pointer`}
+    >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-zinc-900 shadow-md transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl group-hover:shadow-cyan-500/10">
         <img
           src={cover}
@@ -15,8 +20,7 @@ export const AnimeCard = ({ anime, size = 'normal' }) => {
           loading="lazy"
           onError={(e) => { e.target.src = 'https://via.placeholder.com/300x450/1a1a2e/ffffff?text=No+Image'; }}
         />
-        
-        {/* Absolute indicators */}
+        {/* ... indicators remain unchanged ... */}
         {anime.episode?.episode_number && (
           <div className="absolute bottom-2 right-2 rounded-sm bg-zinc-950/90 px-1.5 py-0.5 text-[10px] font-bold text-zinc-100 backdrop-blur-xs">
             EP {anime.episode.episode_number}
@@ -44,6 +48,6 @@ export const AnimeCard = ({ anime, size = 'normal' }) => {
           </p>
         )}
       </div>
-    </div>
+    </Link>
   );
 };
