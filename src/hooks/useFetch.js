@@ -5,6 +5,16 @@ export const useFetch = (endpoint, options = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const resolvedEndpoint = (() => {
+    if (!endpoint || /^https?:\/\//i.test(endpoint)) return endpoint;
+
+    if (typeof window !== 'undefined' && import.meta.env.PROD) {
+      return `${window.location.origin}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+    }
+
+    return endpoint;
+  })();
+
   // Store options in a ref to avoid re-running effect on options change
   const optionsRef = useRef(options);
   useEffect(() => {
@@ -24,7 +34,7 @@ export const useFetch = (endpoint, options = {}) => {
           },
         };
 
-        const res = await fetch(endpoint, fetchOptions);
+        const res = await fetch(resolvedEndpoint, fetchOptions);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         setData(json);
@@ -36,7 +46,7 @@ export const useFetch = (endpoint, options = {}) => {
       }
     };
     fetchData();
-  }, [endpoint]); // <-- only re-run when endpoint changes
+  }, [resolvedEndpoint]); // <-- rerun when the resolved URL changes
   // options are handled via ref, not as a dependency
 
   return { data, loading, error };
