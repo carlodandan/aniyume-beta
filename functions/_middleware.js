@@ -6,7 +6,7 @@ export async function onRequest(context) {
     return next();
   }
 
-  const upstream = 'https://lightanime-api.webbase.workers.dev';
+  const upstream = 'https://reanime-api-production.up.railway.app';
   const targetUrl = new URL(url.pathname.replace(/^\/api/, '') + url.search, upstream);
 
   const headers = new Headers(request.headers);
