@@ -104,10 +104,7 @@ const Watch = () => {
       tracks: tracks,
       customType: {
         m3u8: function (video, url) {
-          const hls = new Hls({
-            enableWorker: false,
-            enableWebAssembly: false,
-          });
+          const hls = new Hls();
           hls.loadSource(url);
           hls.attachMedia(video);
           video._hls = hls;
